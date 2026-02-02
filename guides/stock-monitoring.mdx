@@ -1,0 +1,99 @@
+---
+title: "Suivi du stock"
+description: "Comment surveiller les niveaux de stock et automatiser le reapprovisionnement"
+---
+
+## Objectif
+
+Ce guide montre comment utiliser l'API Treats pour surveiller les niveaux de stock
+et declencher des alertes ou commandes automatiques de reapprovisionnement.
+
+**Permission requise :** `STOCK_READ`
+
+## Cas d'usage
+
+- **Fournisseur** : recevoir une alerte quand un produit passe sous le seuil
+- **Pharmacie veterinaire** : synchroniser les niveaux de stock pour anticiper les commandes
+- **Dashboard interne** : afficher l'etat du stock en temps reel
+
+## Verifier le stock bas
+
+L'endpoint `/stock/low` retourne directement les articles sous le seuil minimum :
+
+```bash
+curl -H "X-API-Key: vk_votre_cle" \
+  https://api.treats.vet/api/v1/stock/low
+```
+
+```json
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "productName": "Amoxicilline 500mg",
+    "productCategory": "Antibiotique",
+    "quantity": 3,
+    "minThreshold": 10,
+    "isLowStock": true,
+    "isOutOfStock": false
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "productName": "Seringues 5ml",
+    "productCategory": "Consommable",
+    "quantity": 0,
+    "minThreshold": 50,
+    "isLowStock": true,
+    "isOutOfStock": true
+  }
+]
+```
+
+## Exemple : polling periodique
+
+```javascript
+const TREATS_API = 'https://api.treats.vet/api/v1';
+const API_KEY = process.env.TREATS_API_KEY;
+
+async function checkLowStock() {
+  const response = await fetch(`${TREATS_API}/stock/low`, {
+    headers: { 'X-API-Key': API_KEY }
+  });
+
+  if (!response.ok) {
+    console.error(`Erreur API: ${response.status}`);
+    return;
+  }
+
+  const lowStockItems = await response.json();
+
+  const outOfStock = lowStockItems.filter(item => item.isOutOfStock);
+  const lowStock = lowStockItems.filter(item => !item.isOutOfStock);
+
+  if (outOfStock.length > 0) {
+    // Alerte critique : rupture de stock
+    await sendAlert('CRITICAL', outOfStock);
+  }
+
+  if (lowStock.length > 0) {
+    // Alerte info : stock bas
+    await sendAlert('WARNING', lowStock);
+  }
+}
+
+// Verifier toutes les heures
+setInterval(checkLowStock, 60 * 60 * 1000);
+```
+
+## Consulter tout le stock
+
+Pour un tableau de bord complet :
+
+```bash
+curl -H "X-API-Key: vk_votre_cle" \
+  https://api.treats.vet/api/v1/stock
+```
+
+<Tip>
+  Avec un niveau d'acces **STANDARD** ou **FULL**, vous obtiendrez aussi les seuils
+  (`minThreshold`, `maxThreshold`) pour calculer des previsions de reapprovisionnement.
+</Tip>

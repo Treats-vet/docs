@@ -1,0 +1,60 @@
+---
+title: "Introduction"
+description: "Bienvenue sur la documentation de l'API publique Treats"
+---
+
+# API Treats
+
+L'API Treats permet aux partenaires d'accéder aux donnees metier d'une clinique veterinaire : patients, clients, rendez-vous, consultations, factures et stock.
+
+## Ce que vous pouvez faire
+
+<CardGroup cols={2}>
+  <Card title="Patients" icon="paw">
+    Consulter la liste des animaux, leurs informations et leur historique.
+  </Card>
+  <Card title="Clients" icon="users">
+    Acceder aux fiches proprietaires et a leurs coordonnees.
+  </Card>
+  <Card title="Rendez-vous" icon="calendar">
+    Consulter les creneaux disponibles et creer des rendez-vous.
+  </Card>
+  <Card title="Factures" icon="file-invoice">
+    Acceder aux factures et au suivi financier par client.
+  </Card>
+  <Card title="Consultations" icon="stethoscope">
+    Lire les comptes-rendus de consultations veterinaires.
+  </Card>
+  <Card title="Stock" icon="boxes-stacked">
+    Suivre les niveaux de stock et les alertes de reapprovisionnement.
+  </Card>
+</CardGroup>
+
+## Concepts cles
+
+### Authentification par cle API
+
+Chaque partenaire recoit une cle API unique (format `vk_...`) configuree par l'administrateur de la clinique. Cette cle determine :
+
+- **Les endpoints accessibles** via un systeme de permissions granulaires
+- **Le niveau de detail** des reponses (BASIC, STANDARD ou FULL)
+- **La limite de requetes** par heure
+
+### Isolation par clinique
+
+Chaque cle API est liee a une clinique. Vous n'accedez qu'aux donnees de la clinique qui vous a fourni la cle.
+
+### Lecture seule
+
+L'API partenaire est principalement en lecture seule. La seule operation d'ecriture disponible est la **creation de rendez-vous**, destinee aux integrations de type booking.
+
+## Prochaines etapes
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/guides/quickstart">
+    Votre premier appel API en 2 minutes.
+  </Card>
+  <Card title="Authentification" icon="key" href="/guides/authentication">
+    Tout sur les cles API et les headers.
+  </Card>
+</CardGroup>

@@ -1,0 +1,142 @@
+---
+title: "Niveaux d'acces"
+description: "Comment les niveaux BASIC, STANDARD et FULL controlent la visibilite des champs"
+---
+
+## Principe
+
+Chaque cle API possede un **niveau d'acces** qui determine quels champs sont retournes dans les reponses JSON. Cela permet a la clinique de controler precisement les donnees partagees avec chaque partenaire.
+
+<Note>
+  Le niveau d'acces ne change **pas** les endpoints accessibles (ca, c'est le role des permissions).
+  Il filtre les **champs** dans les reponses.
+</Note>
+
+## Les trois niveaux
+
+| Niveau | Description | Cas d'usage |
+|--------|-------------|-------------|
+| **BASIC** | Identifiants et infos minimales | Affichage de listes, references croisees |
+| **STANDARD** | Informations metier courantes | Integrations metier classiques |
+| **FULL** | Toutes les donnees disponibles | Partenaires de confiance, synchronisation complete |
+
+## Configuration par cle
+
+Chaque cle a :
+- Un **niveau par defaut** qui s'applique a toutes les ressources
+- Des **surcharges par ressource** pour ajuster finement
+
+Exemple de configuration :
+```json
+{
+  "defaultAccessLevel": "STANDARD",
+  "resourceScopes": {
+    "patient": "FULL",
+    "client": "BASIC"
+  }
+}
+```
+
+Dans cet exemple :
+- `/patients` retourne **tous** les champs (FULL)
+- `/clients` retourne uniquement id, firstName, lastName (BASIC)
+- `/invoices` retourne le niveau STANDARD (defaut)
+
+## Champs par ressource
+
+### Patient
+
+| Champ | BASIC | STANDARD | FULL |
+|-------|:-----:|:--------:|:----:|
+| `id` | x | x | x |
+| `name` | x | x | x |
+| `species` | x | x | x |
+| `breed` | x | x | x |
+| `sex` | x | x | x |
+| `clientId` | | x | x |
+| `birthDate` | | x | x |
+| `microchipNumber` | | x | x |
+| `createdAt` | | x | x |
+| `photoUrl` | | | x |
+| `updatedAt` | | | x |
+
+### Client
+
+| Champ | BASIC | STANDARD | FULL |
+|-------|:-----:|:--------:|:----:|
+| `id` | x | x | x |
+| `firstName` | x | x | x |
+| `lastName` | x | x | x |
+| `phone` | | x | x |
+| `email` | | x | x |
+| `createdAt` | | x | x |
+| `address` | | | x |
+| `updatedAt` | | | x |
+
+### Rendez-vous
+
+| Champ | BASIC | STANDARD | FULL |
+|-------|:-----:|:--------:|:----:|
+| `id` | x | x | x |
+| `patientId` | x | x | x |
+| `vetId` | x | x | x |
+| `scheduledAt` | x | x | x |
+| `status` | x | x | x |
+| `clientId` | | x | x |
+| `appointmentTypeId` | | x | x |
+| `endTime` | | x | x |
+| `reason` | | x | x |
+| `isUrgent` | | x | x |
+| `createdAt` | | x | x |
+| `displayStatus` | | | x |
+| `arrivedAt` | | | x |
+| `calledAt` | | | x |
+
+### Consultation
+
+| Champ | BASIC | STANDARD | FULL |
+|-------|:-----:|:--------:|:----:|
+| `id` | x | x | x |
+| `patientId` | x | x | x |
+| `vetId` | x | x | x |
+| `status` | x | x | x |
+| `startedAt` | x | x | x |
+| `appointmentId` | | x | x |
+| `importance` | | x | x |
+| `validatedAt` | | x | x |
+| `ownerSummary` | | x | x |
+| `ownerDiagnosis` | | x | x |
+| `ownerInstructions` | | x | x |
+| `createdAt` | | | x |
+
+### Facture
+
+| Champ | BASIC | STANDARD | FULL |
+|-------|:-----:|:--------:|:----:|
+| `id` | x | x | x |
+| `clientId` | x | x | x |
+| `invoiceNumber` | x | x | x |
+| `status` | x | x | x |
+| `totalTtc` | x | x | x |
+| `subtotal` | | x | x |
+| `totalTax` | | x | x |
+| `paidAmount` | | x | x |
+| `remainingAmount` | | x | x |
+| `createdAt` | | x | x |
+| `consultationId` | | | x |
+
+### Stock
+
+| Champ | BASIC | STANDARD | FULL |
+|-------|:-----:|:--------:|:----:|
+| `id` | x | x | x |
+| `productName` | x | x | x |
+| `productCategory` | x | x | x |
+| `quantity` | x | x | x |
+| `isLowStock` | x | x | x |
+| `isOutOfStock` | x | x | x |
+| `productId` | | x | x |
+| `minThreshold` | | x | x |
+| `maxThreshold` | | x | x |
+| `lastMovementAt` | | x | x |
+| `updatedAt` | | | x |

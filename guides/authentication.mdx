@@ -1,0 +1,117 @@
+---
+title: "Authentification"
+description: "Comment s'authentifier aupres de l'API Treats"
+---
+
+## Cle API
+
+Toute requete vers l'API doit inclure une cle API valide dans le header HTTP `X-API-Key`.
+
+```bash
+curl -H "X-API-Key: vk_aBcDeFgHiJkL..." \
+  https://api.treats.vet/api/v1/patients
+```
+
+### Format de la cle
+
+Les cles API Treats commencent toujours par le prefixe `vk_` suivi d'une chaine aleatoire encodee en Base64 URL-safe.
+
+```
+vk_dGhpcyBpcyBhIHNhbXBsZSBrZXk
+```
+
+### Obtenir une cle
+
+Les cles sont creees par l'administrateur de la clinique depuis le panneau d'administration Treats.
+Lors de la creation, la cle brute est affichee **une seule fois**. Elle ne peut pas etre recuperee ensuite.
+
+<Warning>
+  Stockez votre cle de maniere securisee (variable d'environnement, secret manager).
+  Ne la commitez jamais dans votre code source.
+</Warning>
+
+## Configuration de la cle
+
+Chaque cle API est configuree avec :
+
+| Parametre | Description | Exemple |
+|-----------|-------------|---------|
+| **Permissions** | Endpoints accessibles | `PATIENT_READ`, `APPOINTMENT_CREATE` |
+| **Niveau d'acces par defaut** | Visibilite des champs | `STANDARD` |
+| **Scopes par ressource** | Surcharge par type de donnee | `patient: FULL`, `client: BASIC` |
+| **Limite de requetes** | Requetes par heure | `1000` |
+| **Date d'expiration** | Optionnelle | `2026-12-31` |
+
+## Permissions disponibles
+
+| Permission | Acces |
+|------------|-------|
+| `PATIENT_READ` | `GET /patients`, `GET /patients/{id}` |
+| `CLIENT_READ` | `GET /clients`, `GET /clients/{id}` |
+| `APPOINTMENT_READ` | `GET /appointments/{id}`, `GET /appointments/types`, `GET /appointments/available-slots` |
+| `APPOINTMENT_CREATE` | `POST /appointments` |
+| `CONSULTATION_READ` | `GET /consultations/{id}` |
+| `INVOICE_READ` | `GET /invoices/{id}`, `GET /invoices/client/{clientId}` |
+| `STOCK_READ` | `GET /stock`, `GET /stock/{stockId}`, `GET /stock/low` |
+
+Si votre cle n'a pas la permission requise pour un endpoint, vous recevrez une erreur `403 Forbidden`.
+
+## Reponses d'erreur
+
+### Cle manquante
+
+```json
+// 401 Unauthorized
+{
+  "message": "Authentication required"
+}
+```
+
+### Cle invalide ou expiree
+
+```json
+// 401 Unauthorized
+{
+  "message": "Invalid or expired API key"
+}
+```
+
+### Permission manquante
+
+```json
+// 403 Forbidden
+{
+  "message": "Insufficient permissions"
+}
+```
+
+## Bonnes pratiques
+
+<AccordionGroup>
+  <Accordion title="Utilisez des variables d'environnement">
+    Ne codez jamais la cle en dur dans votre application.
+
+    ```bash
+    export TREATS_API_KEY=vk_votre_cle_ici
+    ```
+
+    ```javascript
+    const apiKey = process.env.TREATS_API_KEY;
+    ```
+  </Accordion>
+
+  <Accordion title="Demandez le minimum de permissions">
+    Si votre integration n'a besoin que de lire les patients, demandez uniquement `PATIENT_READ`.
+    Moins de permissions = moins de risques en cas de fuite de la cle.
+  </Accordion>
+
+  <Accordion title="Utilisez des cles differentes par environnement">
+    Creez une cle pour le developpement et une autre pour la production.
+    Cela permet de revoquer l'une sans impacter l'autre.
+  </Accordion>
+
+  <Accordion title="Gerez l'expiration">
+    Si votre cle a une date d'expiration, prevoyez un mecanisme de renouvellement
+    aupres de l'administrateur de la clinique avant l'echeance.
+  </Accordion>
+</AccordionGroup>

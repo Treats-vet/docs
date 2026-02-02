@@ -1,0 +1,72 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Treats",
+  "logo": {
+    "light": "/images/logo-light.svg",
+    "dark": "/images/logo-dark.svg"
+  },
+  "favicon": "/images/favicon.svg",
+  "colors": {
+    "primary": "#16A34A",
+    "light": "#4ADE80",
+    "dark": "#15803D",
+    "background": {
+      "dark": "#0F172A"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "url": "mailto:support@treats.vet"
+      }
+    ]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Pour commencer",
+            "pages": [
+              "guides/introduction",
+              "guides/quickstart",
+              "guides/authentication",
+              "guides/access-levels",
+              "guides/rate-limiting",
+              "guides/errors"
+            ]
+          },
+          {
+            "group": "Cas d'usage",
+            "pages": [
+              "guides/booking-integration",
+              "guides/stock-monitoring"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.yaml"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "website": "https://treats.vet"
+    }
+  },
+  "api": {
+    "baseUrl": "https://api.treats.vet/api/v1",
+    "auth": {
+      "method": "key",
+      "name": "X-API-Key"
+    },
+    "playground": {
+      "mode": "simple"
+    }
+  }
+}

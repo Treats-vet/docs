@@ -1,0 +1,95 @@
+---
+title: "Gestion des erreurs"
+description: "Codes d'erreur HTTP et format des reponses"
+---
+
+## Format des erreurs
+
+Toutes les erreurs retournent un objet JSON avec un champ `message` :
+
+```json
+{
+  "message": "Description de l'erreur"
+}
+```
+
+## Codes HTTP
+
+| Code | Signification | Quand |
+|------|--------------|-------|
+| `200` | OK | Requete reussie |
+| `201` | Created | Ressource creee (ex: rendez-vous) |
+| `400` | Bad Request | Requete invalide (champs manquants, format incorrect) |
+| `401` | Unauthorized | Cle API manquante, invalide ou expiree |
+| `403` | Forbidden | Permission manquante sur la cle |
+| `404` | Not Found | Ressource introuvable |
+| `409` | Conflict | Conflit (ex: creneau deja occupe) |
+| `429` | Too Many Requests | Limite de requetes depassee |
+| `500` | Internal Server Error | Erreur serveur |
+
+## Exemples
+
+### 401 - Cle invalide
+
+```bash
+curl -H "X-API-Key: vk_cle_invalide" \
+  https://api.treats.vet/api/v1/patients
+```
+
+```json
+{
+  "message": "Invalid or expired API key"
+}
+```
+
+### 403 - Permission manquante
+
+Votre cle a `PATIENT_READ` mais pas `CLIENT_READ` :
+
+```bash
+curl -H "X-API-Key: vk_votre_cle" \
+  https://api.treats.vet/api/v1/clients
+```
+
+```json
+{
+  "message": "Insufficient permissions"
+}
+```
+
+### 404 - Ressource introuvable
+
+```bash
+curl -H "X-API-Key: vk_votre_cle" \
+  https://api.treats.vet/api/v1/patients/00000000-0000-0000-0000-000000000000
+```
+
+```json
+{
+  "message": "Resource not found"
+}
+```
+
+### 429 - Rate limit
+
+```json
+{
+  "message": "Rate limit exceeded. Please try again later.",
+  "retryAfter": 42
+}
+```
+
+Headers :
+```
+Retry-After: 42
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 0
+```
+
+## Conseils
+
+<Tip>
+  Gerez toujours les erreurs 401 et 429 dans votre code.
+  Le 401 peut indiquer une cle expiree a renouveler,
+  et le 429 necessite un mecanisme de retry.
+</Tip>

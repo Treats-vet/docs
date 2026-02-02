@@ -1,0 +1,883 @@
+openapi: 3.1.0
+info:
+  title: Veto Public API
+  description: |
+    API publique de la plateforme vétérinaire Veto, destinée aux intégrations partenaires.
+
+    ## Authentification
+
+    Toutes les requêtes doivent inclure une clé API via le header `X-API-Key`.
+    Les clés sont créées et configurées par l'administrateur de la clinique.
+
+    ```
+    X-API-Key: vk_votre_cle_ici
+    ```
+
+    ## Niveaux d'accès
+
+    Chaque clé API est configurée avec un niveau d'accès qui détermine la visibilité des champs dans les réponses :
+
+    | Niveau | Description |
+    |--------|-------------|
+    | **BASIC** | Identifiants et informations minimales (noms, espèces, statuts) |
+    | **STANDARD** | Informations métier courantes (contacts, dates, montants) |
+    | **FULL** | Toutes les informations disponibles |
+
+    Le niveau peut être défini globalement ou par ressource. Par exemple, une clé peut avoir un accès FULL sur les patients mais BASIC sur les clients.
+
+    ## Rate Limiting
+
+    Chaque clé est soumise à une limite de requêtes par heure (par défaut : 1000).
+    En cas de dépassement, l'API retourne `429 Too Many Requests` avec un header `Retry-After`.
+
+    ## Permissions
+
+    La clé API détermine quels endpoints sont accessibles. Les permissions disponibles sont :
+
+    | Permission | Accès |
+    |------------|-------|
+    | `PATIENT_READ` | Lecture des patients |
+    | `CLIENT_READ` | Lecture des clients |
+    | `APPOINTMENT_READ` | Lecture des rendez-vous, créneaux, types |
+    | `APPOINTMENT_CREATE` | Création de rendez-vous |
+    | `CONSULTATION_READ` | Lecture des consultations |
+    | `INVOICE_READ` | Lecture des factures |
+    | `STOCK_READ` | Lecture du stock |
+
+  version: 1.0.0
+  contact:
+    name: Support API Veto
+
+servers:
+  - url: https://api.treats.vet/api/v1
+    description: Production
+
+security:
+  - apiKeyAuth: []
+
+tags:
+  - name: Patients
+    description: Animaux enregistrés dans la clinique
+  - name: Clients
+    description: Propriétaires des animaux
+  - name: Rendez-vous
+    description: Prise et consultation de rendez-vous
+  - name: Consultations
+    description: Comptes-rendus de consultations vétérinaires
+  - name: Factures
+    description: Factures et suivi financier
+  - name: Stock
+    description: Inventaire et niveaux de stock
+
+paths:
+  # ──────────────────────────────
+  #  PATIENTS
+  # ──────────────────────────────
+  /patients:
+    get:
+      tags: [Patients]
+      summary: Lister les patients de la clinique
+      operationId: listPatients
+      description: |
+        Retourne la liste de tous les patients (animaux) de la clinique.
+
+        **Champs retournés selon le niveau d'accès :**
+        - **BASIC** : `id`, `name`, `species`, `breed`, `sex`
+        - **STANDARD** : + `clientId`, `birthDate`, `microchipNumber`, `createdAt`
+        - **FULL** : Tous les champs
+
+        **Permission requise :** `PATIENT_READ`
+      responses:
+        '200':
+          description: Liste des patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Patient'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /patients/{id}:
+    get:
+      tags: [Patients]
+      summary: Détails d'un patient
+      operationId: getPatient
+      description: |
+        Retourne les détails d'un patient par son identifiant.
+
+        **Permission requise :** `PATIENT_READ`
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Détails du patient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ──────────────────────────────
+  #  CLIENTS
+  # ──────────────────────────────
+  /clients:
+    get:
+      tags: [Clients]
+      summary: Lister les clients de la clinique
+      operationId: listClients
+      description: |
+        Retourne la liste des clients (propriétaires) de la clinique.
+
+        **Champs retournés selon le niveau d'accès :**
+        - **BASIC** : `id`, `firstName`, `lastName`
+        - **STANDARD** : + `phone`, `email`, `createdAt`
+        - **FULL** : Tous les champs
+
+        **Permission requise :** `CLIENT_READ`
+      responses:
+        '200':
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /clients/{id}:
+    get:
+      tags: [Clients]
+      summary: Détails d'un client
+      operationId: getClient
+      description: |
+        Retourne les détails d'un client par son identifiant.
+
+        **Permission requise :** `CLIENT_READ`
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Détails du client
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ──────────────────────────────
+  #  RENDEZ-VOUS
+  # ──────────────────────────────
+  /appointments/{id}:
+    get:
+      tags: [Rendez-vous]
+      summary: Détails d'un rendez-vous
+      operationId: getAppointment
+      description: |
+        Retourne les détails d'un rendez-vous par son identifiant.
+
+        **Champs retournés selon le niveau d'accès :**
+        - **BASIC** : `id`, `patientId`, `vetId`, `scheduledAt`, `status`
+        - **STANDARD** : + `clientId`, `appointmentTypeId`, `endTime`, `reason`, `isUrgent`, `createdAt`
+        - **FULL** : Tous les champs
+
+        **Permission requise :** `APPOINTMENT_READ`
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Détails du rendez-vous
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /appointments/types:
+    get:
+      tags: [Rendez-vous]
+      summary: Types de rendez-vous disponibles
+      operationId: listAppointmentTypes
+      description: |
+        Retourne la liste des types de rendez-vous configurés par la clinique
+        (consultation, vaccination, chirurgie, etc.).
+
+        **Permission requise :** `APPOINTMENT_READ`
+      responses:
+        '200':
+          description: Liste des types de rendez-vous
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentType'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /appointments/available-slots:
+    get:
+      tags: [Rendez-vous]
+      summary: Créneaux disponibles
+      operationId: getAvailableSlots
+      description: |
+        Retourne les créneaux horaires disponibles pour un vétérinaire
+        à une date donnée, en fonction du type de rendez-vous.
+
+        **Permission requise :** `APPOINTMENT_READ`
+      parameters:
+        - name: vetId
+          in: query
+          description: Identifiant du vétérinaire
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          description: Date souhaitée (format YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: appointmentTypeId
+          in: query
+          description: Type de rendez-vous
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Créneaux disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableSlot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /appointments:
+    post:
+      tags: [Rendez-vous]
+      summary: Créer un rendez-vous
+      operationId: createAppointment
+      description: |
+        Crée un nouveau rendez-vous pour un patient.
+        Utilisez d'abord `/appointments/available-slots` pour vérifier la disponibilité.
+
+        **Permission requise :** `APPOINTMENT_CREATE`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentRequest'
+            example:
+              clientId: "550e8400-e29b-41d4-a716-446655440000"
+              patientId: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+              vetId: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+              appointmentTypeId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+              scheduledAt: "2026-02-15T10:00:00Z"
+              reason: "Vaccination annuelle"
+      responses:
+        '201':
+          description: Rendez-vous créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Conflit - créneau déjà occupé
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ──────────────────────────────
+  #  CONSULTATIONS
+  # ──────────────────────────────
+  /consultations/{id}:
+    get:
+      tags: [Consultations]
+      summary: Détails d'une consultation
+      operationId: getConsultation
+      description: |
+        Retourne les détails d'une consultation vétérinaire.
+
+        **Champs retournés selon le niveau d'accès :**
+        - **BASIC** : `id`, `patientId`, `vetId`, `status`, `startedAt`
+        - **STANDARD** : + `appointmentId`, `importance`, `validatedAt`, `ownerSummary`, `ownerDiagnosis`, `ownerInstructions`
+        - **FULL** : Tous les champs
+
+        **Permission requise :** `CONSULTATION_READ`
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Détails de la consultation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consultation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ──────────────────────────────
+  #  FACTURES
+  # ──────────────────────────────
+  /invoices/{id}:
+    get:
+      tags: [Factures]
+      summary: Détails d'une facture
+      operationId: getInvoice
+      description: |
+        Retourne les détails d'une facture.
+
+        **Champs retournés selon le niveau d'accès :**
+        - **BASIC** : `id`, `clientId`, `invoiceNumber`, `status`, `totalTtc`
+        - **STANDARD** : + `subtotal`, `totalTax`, `paidAmount`, `remainingAmount`, `createdAt`
+        - **FULL** : Tous les champs
+
+        **Permission requise :** `INVOICE_READ`
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Détails de la facture
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /invoices/client/{clientId}:
+    get:
+      tags: [Factures]
+      summary: Factures d'un client
+      operationId: getInvoicesByClient
+      description: |
+        Retourne toutes les factures associées à un client.
+
+        **Permission requise :** `INVOICE_READ`
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Identifiant du client
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Liste des factures
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ──────────────────────────────
+  #  STOCK
+  # ──────────────────────────────
+  /stock:
+    get:
+      tags: [Stock]
+      summary: Lister le stock
+      operationId: listStock
+      description: |
+        Retourne la liste des articles en stock.
+
+        **Champs retournés selon le niveau d'accès :**
+        - **BASIC** : `id`, `productName`, `productCategory`, `quantity`, `isLowStock`, `isOutOfStock`
+        - **STANDARD** : + `productId`, `minThreshold`, `maxThreshold`, `lastMovementAt`
+        - **FULL** : Tous les champs
+
+        **Permission requise :** `STOCK_READ`
+      responses:
+        '200':
+          description: Liste du stock
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /stock/{stockId}:
+    get:
+      tags: [Stock]
+      summary: Détails d'un article en stock
+      operationId: getStockItem
+      description: |
+        Retourne les détails d'un article en stock.
+
+        **Permission requise :** `STOCK_READ`
+      parameters:
+        - name: stockId
+          in: path
+          required: true
+          description: Identifiant de l'article
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détails de l'article
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /stock/low:
+    get:
+      tags: [Stock]
+      summary: Articles en rupture ou stock bas
+      operationId: getLowStock
+      description: |
+        Retourne les articles dont le stock est inférieur au seuil minimum.
+        Utile pour les intégrations de réapprovisionnement automatique.
+
+        **Permission requise :** `STOCK_READ`
+      responses:
+        '200':
+          description: Articles en stock bas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+# ═══════════════════════════════════════
+#  COMPONENTS
+# ═══════════════════════════════════════
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Clé API fournie par l'administrateur de la clinique.
+        Format : `vk_...`
+
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Identifiant unique (UUID)
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Clé API manquante, invalide ou expirée
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Invalid or expired API key"
+
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Resource not found"
+
+    RateLimited:
+      description: Limite de requêtes dépassée
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Secondes avant réinitialisation de la limite
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Nombre maximum de requêtes par heure
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Requêtes restantes dans la fenêtre courante
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Rate limit exceeded. Please try again later."
+              retryAfter:
+                type: integer
+
+  # ─────────────────────────────
+  #  SCHEMAS
+  # ─────────────────────────────
+  schemas:
+    Patient:
+      type: object
+      description: Animal enregistré dans la clinique
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique
+        clientId:
+          type: string
+          format: uuid
+          description: Identifiant du propriétaire
+        name:
+          type: string
+          example: Rex
+          description: Nom de l'animal
+        species:
+          type: string
+          example: Chien
+          description: Espèce
+        breed:
+          type: string
+          example: Golden Retriever
+          description: Race
+        sex:
+          type: string
+          enum: [MALE, FEMALE, UNKNOWN]
+          description: Sexe
+        birthDate:
+          type: string
+          format: date
+          description: Date de naissance
+        microchipNumber:
+          type: string
+          description: Numéro de puce électronique
+        photoUrl:
+          type: string
+          description: URL de la photo
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Client:
+      type: object
+      description: Propriétaire d'un ou plusieurs animaux
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique
+        firstName:
+          type: string
+          example: Jean
+        lastName:
+          type: string
+          example: Dupont
+        phone:
+          type: string
+          example: "+33612345678"
+        email:
+          type: string
+          format: email
+          example: jean.dupont@email.fr
+        address:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Appointment:
+      type: object
+      description: Rendez-vous à la clinique
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+          description: Propriétaire
+        patientId:
+          type: string
+          format: uuid
+          description: Animal concerné
+        appointmentTypeId:
+          type: string
+          format: uuid
+          description: Type de rendez-vous
+        vetId:
+          type: string
+          format: uuid
+          description: Vétérinaire assigné
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Date et heure prévues
+        endTime:
+          type: string
+          format: date-time
+          description: Heure de fin prévue
+        reason:
+          type: string
+          description: Motif du rendez-vous
+        isUrgent:
+          type: boolean
+        status:
+          type: string
+          description: Statut actuel du rendez-vous
+        displayStatus:
+          type: string
+          description: Statut affiché (libellé)
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateAppointmentRequest:
+      type: object
+      required: [clientId, patientId, vetId, scheduledAt]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+          description: Identifiant du propriétaire
+        patientId:
+          type: string
+          format: uuid
+          description: Identifiant de l'animal
+        appointmentTypeId:
+          type: string
+          format: uuid
+          description: Type de rendez-vous (obtenu via `/appointments/types`)
+        vetId:
+          type: string
+          format: uuid
+          description: Vétérinaire souhaité
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Date et heure souhaitées (vérifier via `/appointments/available-slots`)
+        reason:
+          type: string
+          description: Motif de la visite
+        isUrgent:
+          type: boolean
+          default: false
+          description: Rendez-vous urgent
+
+    AppointmentType:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Consultation générale
+        durationMinutes:
+          type: integer
+          example: 30
+        color:
+          type: string
+          example: "#4CAF50"
+
+    AvailableSlot:
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: date-time
+          description: Début du créneau
+        endTime:
+          type: string
+          format: date-time
+          description: Fin du créneau
+
+    Consultation:
+      type: object
+      description: Compte-rendu d'une consultation vétérinaire
+      properties:
+        id:
+          type: string
+          format: uuid
+        appointmentId:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        vetId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          description: "Statut : IN_PROGRESS, VALIDATED"
+        importance:
+          type: string
+          description: "Niveau d'importance : ROUTINE, IMPORTANT, CRITICAL"
+        startedAt:
+          type: string
+          format: date-time
+        validatedAt:
+          type: string
+          format: date-time
+        ownerSummary:
+          type: string
+          description: Résumé destiné au propriétaire
+        ownerDiagnosis:
+          type: string
+          description: Diagnostic simplifié pour le propriétaire
+        ownerInstructions:
+          type: string
+          description: Instructions de suivi pour le propriétaire
+        createdAt:
+          type: string
+          format: date-time
+
+    Invoice:
+      type: object
+      description: Facture liée à une consultation ou un acte
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        consultationId:
+          type: string
+          format: uuid
+        invoiceNumber:
+          type: string
+          example: "FAC-2026-001"
+        status:
+          type: string
+          description: "Statut : DRAFT, SENT, PAID, OVERDUE, CANCELLED"
+        subtotal:
+          type: number
+          format: decimal
+          description: Montant HT
+        totalTax:
+          type: number
+          format: decimal
+          description: Montant TVA
+        totalTtc:
+          type: number
+          format: decimal
+          description: Montant TTC
+        paidAmount:
+          type: number
+          format: decimal
+          description: Montant déjà payé
+        remainingAmount:
+          type: number
+          format: decimal
+          description: Reste à payer
+        createdAt:
+          type: string
+          format: date-time
+
+    StockItem:
+      type: object
+      description: Article en stock
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          example: Amoxicilline 500mg
+        productCategory:
+          type: string
+          example: Antibiotique
+        quantity:
+          type: integer
+          description: Quantité actuelle
+        minThreshold:
+          type: integer
+          description: Seuil minimum d'alerte
+        maxThreshold:
+          type: integer
+          description: Seuil maximum
+        isLowStock:
+          type: boolean
+          description: Stock sous le seuil minimum
+        isOutOfStock:
+          type: boolean
+          description: Rupture de stock
+        lastMovementAt:
+          type: string
+          format: date-time
+          description: Date du dernier mouvement de stock
+        updatedAt:
+          type: string
+          format: date-time

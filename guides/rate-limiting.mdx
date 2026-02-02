@@ -1,0 +1,88 @@
+---
+title: "Rate Limiting"
+description: "Limites de requetes et comment les gerer"
+---
+
+## Fonctionnement
+
+Chaque cle API dispose d'une limite de requetes par heure (par defaut : **1000 requetes/heure**).
+Cette limite est configurable par l'administrateur de la clinique lors de la creation de la cle.
+
+Le compteur utilise une **fenetre glissante** : chaque requete est comptabilisee pendant 1 heure a partir de son execution.
+
+## Headers de reponse
+
+Chaque reponse inclut des headers indiquant l'etat de votre quota :
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Nombre maximum de requetes par heure |
+| `X-RateLimit-Remaining` | Requetes restantes dans la fenetre courante |
+
+## Depassement de limite
+
+Lorsque la limite est atteinte, l'API retourne une erreur `429 Too Many Requests` :
+
+```json
+// 429 Too Many Requests
+{
+  "message": "Rate limit exceeded. Please try again later.",
+  "retryAfter": 42
+}
+```
+
+Le header `Retry-After` indique le nombre de secondes a attendre avant de pouvoir refaire une requete.
+
+```
+HTTP/1.1 429 Too Many Requests
+Retry-After: 42
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 0
+```
+
+## Bonnes pratiques
+
+<AccordionGroup>
+  <Accordion title="Implementez un backoff exponentiel">
+    En cas de 429, attendez le temps indique par `Retry-After`, puis reessayez.
+    Si ca echoue encore, doublez le delai a chaque tentative.
+
+    ```javascript
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+      for (let i = 0; i < maxRetries; i++) {
+        const response = await fetch(url, options);
+
+        if (response.status === 429) {
+          const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
+          const delay = retryAfter * 1000 * Math.pow(2, i);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+
+        return response;
+      }
+      throw new Error('Rate limit exceeded after retries');
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Mettez en cache les donnees stables">
+    Les informations comme les types de rendez-vous ou les fiches patients changent rarement.
+    Mettez-les en cache localement pour reduire le nombre d'appels.
+  </Accordion>
+
+  <Accordion title="Surveillez votre consommation">
+    Loggez les headers `X-RateLimit-Remaining` pour anticiper les depassements
+    et ajuster votre rythme d'appels.
+  </Accordion>
+
+  <Accordion title="Demandez une augmentation si necessaire">
+    Si votre integration necessite plus de requetes, contactez l'administrateur
+    de la clinique pour augmenter la limite sur votre cle.
+  </Accordion>
+</AccordionGroup>
