@@ -10,13 +10,16 @@
   "colors": {
     "primary": "#16A34A",
     "light": "#4ADE80",
-    "dark": "#15803D"
+    "dark": "#15803D",
+    "background": {
+      "dark": "#0F172A"
+    }
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@treats.vet"
+        "url": "mailto:support@treats.vet"
       }
     ]
   },
@@ -48,6 +51,15 @@
       {
         "tab": "API Reference",
         "openapi": "openapi.yaml"
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Changelog",
+            "pages": ["changelog"]
+          }
+        ]
       }
     ]
   },
