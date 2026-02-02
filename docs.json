@@ -10,16 +10,13 @@
   "colors": {
     "primary": "#16A34A",
     "light": "#4ADE80",
-    "dark": "#15803D",
-    "background": {
-      "dark": "#0F172A"
-    }
+    "dark": "#15803D"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "url": "mailto:support@treats.vet"
+        "href": "mailto:support@treats.vet"
       }
     ]
   },
