@@ -8,76 +8,61 @@ Retrouvez ici toutes les mises a jour, nouvelles fonctionnalites et corrections 
 
 {/* CHANGELOG_MARKER */}
 
-<Update label="5 fevrier 2026 (v1.1.0)" tags={["Ameliorations", "Nouveautes"]}>
-
-Date du changelog : 5 février 2026
+<Update label="5 fevrier 2026 (v0.3.0)" tags={["Ameliorations", "Nouveautes"]}>
 
 ### Nouveautés
-- Permettre la gestion multi-sites afin d'administrer plusieurs cliniques/lieux et de basculer entre eux lors de la connexion.
-- Ajouter un système de demande de rendez‑vous depuis le portail client pour que les propriétaires puissent solliciter un créneau en ligne.
-- Ajouter une vérification par code (OTP) et notifications pour sécuriser et confirmer les demandes de rendez‑vous côté client.
-- Permettre d'ajouter des remises et des notes sur les factures, et d'envoyer les factures par e‑mail aux clients.
-- Ajouter un panneau de détail des événements dans l'agenda et des actions de gestion des rendez‑vous (consultation et modification depuis l'agenda).
-- Permettre la gestion des clés API avec définition de périmètres d'utilisation et limitation de trafic pour les intégrations.
-- Permettre l'authentification des clients via OAuth pour simplifier les connexions depuis des fournisseurs externes.
+
+- Permettre la gestion multi-sites afin d'administrer plusieurs cliniques et de basculer entre elles lors de la connexion.
+- Ajouter la possibilité d'appliquer des remises et des notes sur les factures.
+- Permettre l'envoi des factures par e-mail directement aux clients.
 
 ### Améliorations
-- Améliorer l'affichage de l'agenda en incluant les minutes dans l'horodatage des événements pour une lecture plus précise.
-- Étendre la plage horaire visible de l'agenda de 6h à 22h pour couvrir plus de créneaux.
-- Améliorer les fiches client et patient en ajoutant des champs supplémentaires pour stocker plus d'informations pertinentes.
-- Afficher davantage d'informations patient (dont le poids) directement sur les événements de l'agenda pour un aperçu rapide lors des consultations.
-- Permettre de configurer séparément les rappels par SMS et par e‑mail pour chaque rendez‑vous.
 
-### Corrections
-- Corriger l'affichage de la première heure dans l'agenda pour éviter les décalages visuels et améliorer la précision des créneaux.
+- Enrichir les fiches clients et patients avec des informations complémentaires pour le suivi clinique.
+- Améliorer la gestion des données de référence pour le support multi-sites.
 
 </Update>
 
-
-<Update label="4 fevrier 2026 (v0.2.0)" tags={["Ameliorations", "Nouveautes"]}>
-
-Date : 4 février 2026
+<Update label="4 fevrier 2026 (v0.2.0)" tags={["Ameliorations", "Corrections", "Nouveautes"]}>
 
 ### Nouveautés
-- Permettre aux clients de demander des rendez‑vous directement depuis le portail client.
-- Ajouter une vérification par code (OTP) lors des demandes de rendez‑vous pour renforcer la sécurité des prises de rendez‑vous.
+
+- Permettre aux clients de demander des rendez-vous directement depuis le portail client.
+- Ajouter une vérification par code (OTP) lors des demandes de rendez-vous pour renforcer la sécurité des prises de rendez-vous.
 - Permettre la connexion des clients via des comptes externes pour simplifier l'authentification.
-- Ajouter un panneau de détails dans l'agenda pour consulter et gérer un rendez‑vous sans quitter le calendrier.
+- Ajouter un panneau de détails dans l'agenda pour consulter et gérer un rendez-vous sans quitter le calendrier.
 - Ajouter la gestion des clés API pour les intégrations externes, avec définition d'autorisations et de limites d'utilisation.
-- Ajouter la possibilité de contrôler séparément les rappels par SMS et par e‑mail pour chaque rendez‑vous.
+- Ajouter la possibilité de contrôler séparément les rappels par SMS et par e-mail pour chaque rendez-vous.
 
 ### Améliorations
+
 - Enrichir les fiches clients et patients avec des informations complémentaires pour faciliter le suivi clinique.
 - Afficher les informations du patient, notamment le poids, directement sur les événements de l'agenda.
 - Inclure les minutes dans l'affichage des horaires des événements de l'agenda pour une lecture plus précise.
-- Étendre la plage horaire affichée dans l'agenda (6h–22h) pour mieux couvrir la journée.
+- Étendre la plage horaire affichée dans l'agenda (6h-22h) pour mieux couvrir la journée.
 
 ### Corrections
+
 - Corriger l'affichage de la première heure dans l'agenda qui pouvait être décalé.
 
 </Update>
 
-
 <Update label="2 fevrier 2026 (v0.1.0)" tags={["Ameliorations", "Corrections", "Nouveautes"]}>
 
-Date : 2 février 2026
-
 ### Nouveautés
+
 - Ajouter un système de recherche global pour retrouver rapidement fiches patients, consultations et documents.
-- Ajouter la gestion des consultations pour créer, consulter et suivre rendez‑vous et dossiers cliniques depuis l'interface.
-- Ajouter de nouvelles pages et une navigation améliorée pour accéder plus facilement aux sections clés (agenda, consultation, etc.).
-- Ajouter la prise en charge de tâches planifiées en arrière‑plan pour gérer les synchronisations et traitements automatiques.
-- Rediriger automatiquement vers l'agenda après connexion pour atteindre rapidement les rendez‑vous du jour.
+- Ajouter la gestion des consultations pour créer, consulter et suivre rendez-vous et dossiers cliniques depuis l'interface.
+- Ajouter de nouvelles pages et une navigation améliorée pour accéder plus facilement aux sections clés de l'application.
+- Rediriger automatiquement vers l'agenda après connexion pour atteindre rapidement les rendez-vous du jour.
 
 ### Améliorations
+
 - Améliorer l'apparence et la cohérence visuelle pour une expérience utilisateur plus fluide.
 - Améliorer la réactivité des échanges avec le serveur pour des chargements et une navigation plus rapides.
-- Renforcer la sécurité des accès et des traitements en arrière‑plan.
-- Améliorer la stabilité des données et des migrations pour réduire les risques lors des mises à jour.
 
 ### Corrections
-- Corriger un problème de migration de base de données pour assurer le bon déroulement des mises à jour.
-- Corriger des erreurs de compilation côté client pour garantir un accès fiable à l'application.
+
+- Corriger des erreurs de compilation pour garantir un accès fiable à l'application.
 
 </Update>
-
